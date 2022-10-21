@@ -282,6 +282,8 @@ PODS:
   - React-jsinspector (0.68.4)
   - React-logger (0.68.4):
     - glog
+  - react-native-splash-screen (3.3.0):
+    - React-Core
   - React-perflogger (0.68.4)
   - React-RCTActionSheet (0.68.4):
     - React-Core/RCTActionSheetHeaders (= 0.68.4)
@@ -395,6 +397,7 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
+  - react-native-splash-screen (from `../node_modules/react-native-splash-screen`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
@@ -464,6 +467,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   React-logger:
     :path: "../node_modules/react-native/ReactCommon/logger"
+  react-native-splash-screen:
+    :path: "../node_modules/react-native-splash-screen"
   React-perflogger:
     :path: "../node_modules/react-native/ReactCommon/reactperflogger"
   React-RCTActionSheet:
@@ -523,6 +528,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 4f35a29798ba9d0d892a84001d11f626688dbb8e
   React-jsinspector: 6f75220cd4b6020976d340ab21c63458dd3cad9e
   React-logger: 7013d2499df6346e6a72802d4084badaaa82543b
+  react-native-splash-screen: 4312f786b13a81b5169ef346d76d33bc0c6dc457
   React-perflogger: 0b0500685176e53ea582c45179a653aa82e4ae49
   React-RCTActionSheet: 38469be9d20242f9c717e43c2983e8e3e6c640c4
   React-RCTAnimation: 93774f3e8857e7c3c1cbbd277056d02be4496be1
