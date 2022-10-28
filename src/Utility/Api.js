@@ -91,10 +91,23 @@ const create = (baseURL = DEV) => {
       [getOtpUsing]: phone.toLocaleLowerCase(),
       otp: otp,
     };
-    console.log(body, 'body');
+
     return api.post('/verify-otp', body);
   };
-  return {emailLoginApi, getOTP, verifyOTP};
+
+  const createNewPassword = (email = '', password = '') => {
+    const body = {email, password};
+    return api.post('/reset-password', body);
+  };
+
+  const registerUser = data => {
+    // const body = {name, dateofBirth, gender, email, password, phoneNumber};
+    console.log(data, 'data');
+
+    return api.post('/register', data);
+  };
+
+  return {emailLoginApi, getOTP, verifyOTP, createNewPassword, registerUser};
 };
 
 export default {

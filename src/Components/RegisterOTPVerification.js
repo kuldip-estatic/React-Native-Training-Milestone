@@ -5,21 +5,35 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Alert,
+  DeviceEventEmitter,
 } from 'react-native';
+import {useRoute, useNavigation} from '@react-navigation/native';
+import InternetVerify from './InternetVerify';
 import IconBackArrow from 'react-native-vector-icons/Ionicons';
 import TextConstants from '../Utility/TextConstants';
 import Api from '../../src/Utility/Api';
 import OTPTextView from 'react-native-otp-textinput';
 import {Button} from 'react-native-elements';
-import {useRoute, useNavigation} from '@react-navigation/native';
+import SuccessScreen from './successScreen';
 
 IconBackArrow.loadFont();
 const api = Api.create();
-const OTPContainer = () => {
+const RegisterOTPContainer = () => {
   const navigation = useNavigation();
   const [otpExpiresin, setOtpExpiresIn] = useState(60);
   const [otp, setOTP] = useState('');
+  const [offline, setOffline] = useState(true);
   const route = useRoute();
+
+  const internetChangeListener = () => {
+    DeviceEventEmitter.addListener('netListener', netStatus => {
+      setOffline(netStatus);
+    });
+  };
+
+  useEffect(() => {
+    internetChangeListener();
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -40,13 +54,15 @@ const OTPContainer = () => {
       otp,
       'phoneNumber',
     );
+
     if (otp.length === 4) {
       if (response.ok) {
-        navigation.navigate('home');
+        navigation.navigate('success', {
+          countryCode: `${route.params.countryCode}`,
+          phoneNumber: `${route.params.phoneNumber}`,
+        });
       } else {
-        if (response.status === 404) {
-          Alert.alert(response.data.Message);
-        } else if (response.status === 400) {
+        if (response.status === 400) {
           Alert.alert(response.data.Message);
         } else {
           Alert.alert(response.problem);
@@ -60,7 +76,7 @@ const OTPContainer = () => {
   const handleResendOtpClick = async () => {
     const response = await api.getOTP(
       `${route.params.countryCode}${route.params.phoneNumber}`,
-      'login',
+      'registration',
       'phoneNumber',
     );
 
@@ -73,7 +89,6 @@ const OTPContainer = () => {
         Alert.alert(response.problem);
       }
     }
-    // Alert.alert('Sent otp');
   };
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -83,7 +98,7 @@ const OTPContainer = () => {
           flex: 1,
           backgroundColor: '#fff',
         }}>
-        {/* <View style={{marginTop: 20}}>
+        <View style={{marginTop: 20}}>
           <IconBackArrow
             name="arrow-back"
             style={{
@@ -91,9 +106,11 @@ const OTPContainer = () => {
               position: 'absolute',
             }}
             size={20}
-            onPress={() => onPressBack()}
+            onPress={() => {
+              navigation.navigate('register');
+            }}
           />
-        </View> */}
+        </View>
         <Text
           style={{
             fontSize: 24,
@@ -102,7 +119,7 @@ const OTPContainer = () => {
             fontWeight: 'bold',
             marginTop: 33,
           }}>
-          {TextConstants.text_verification_head}
+          Enter OTP
         </Text>
         <Text
           style={{
@@ -112,7 +129,7 @@ const OTPContainer = () => {
             marginTop: 8,
             fontWeight: '400',
           }}>
-          {TextConstants.text_verification_subhead}{' '}
+          We just you a verification code via phone{' '}
           <Text
             style={{
               fontSize: 14,
@@ -120,29 +137,8 @@ const OTPContainer = () => {
               color: '#2667C9',
               fontWeight: '600',
             }}>
-            {' '}
-            {route.params.countryCode}
-            {'  '}
-            <Text style={{alignSelf: 'flex-start'}}>
-              {route.params.phoneNumber
-                .slice(0, route.params.phoneNumber.length - 3)
-                .replace(/[0-9]/g, '*')}
-            </Text>
-            {route.params.phoneNumber.slice(
-              route.params.phoneNumber.length - 3,
-            )}
+            {route.params.countryCode} {route.params.phoneNumber}
           </Text>
-          {/* {email && (
-            <Text
-              style={{
-                fontSize: 14,
-                lineHeight: 21,
-                color: '#2667C9',
-                fontWeight: '600',
-              }}>
-              {email}
-            </Text>
-          )} */}
         </Text>
         <OTPTextView
           inputCount={4}
@@ -161,7 +157,7 @@ const OTPContainer = () => {
           }}
         />
         <Button
-          title={TextConstants.text_submit_button}
+          title="Submit Code"
           buttonStyle={{
             marginVertical: 20,
             borderRadius: 4,
@@ -210,8 +206,9 @@ const OTPContainer = () => {
             setOtpExpiresIn(60);
           }}
         />
+        {!offline && <InternetVerify />}
       </View>
     </TouchableWithoutFeedback>
   );
 };
-export default OTPContainer;
+export default RegisterOTPContainer;

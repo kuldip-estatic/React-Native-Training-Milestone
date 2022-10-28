@@ -44,10 +44,6 @@ const LoginContainer = () => {
   const [passwordVisible, setPasswordVisible] = useState(true);
   const [countryCode, setCountryCode] = useState('+91');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
-  const [loginClicked, setLoginClicked] = useState(false);
-  const [getOtpClicked, setGetOtpClicked] = useState(false);
-  const [verifyOTPClicked, setVerifyOtpClicked] = useState(false);
   const [offline, setOffline] = useState(true);
 
   const internetChangeListener = () => {
@@ -94,9 +90,10 @@ const LoginContainer = () => {
       'phoneNumber',
     );
     if (response.ok) {
+      // navigation.navigate('otp', {phoneNumber: `${countryCode}${phoneNumber}`});
       navigation.navigate('otp', {
-        phoneNumber,
-        countryCode,
+        countryCode: `${countryCode}`,
+        phoneNumber: `${phoneNumber}`,
       });
     } else {
       if (response.status === 404) {

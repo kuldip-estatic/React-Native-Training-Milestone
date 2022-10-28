@@ -7,6 +7,11 @@ import ForgetPasswordContainer from '../Screens/ForgetPassword';
 import RegisterContainer from '../Screens/Register';
 import LoginContainer from '../Screens/Login';
 import OTPContainer from '../Components/OTPVerification';
+import ForgetOTPContainer from '../Components/ForgetOTPVerification';
+import CreateNewPassword from '../Components/CreateNewPassword';
+import SuccessScreen from '../Components/successScreen';
+import RegisterOTPContainer from '../Components/RegisterOTPVerification';
+import CreateAccountContainer from '../Screens/CreateAccount';
 
 const Stack = createNativeStackNavigator();
 
@@ -23,7 +28,18 @@ const Navigator = () => {
           <Stack.Screen name="login" component={LoginContainer} />
           <Stack.Screen name="otp" component={OTPContainer} />
           <Stack.Screen name="register" component={RegisterContainer} />
+          <Stack.Screen name="registerotp" component={RegisterOTPContainer} />
+          <Stack.Screen
+            name="createaccount"
+            component={CreateAccountContainer}
+          />
           <Stack.Screen name="forget" component={ForgetPasswordContainer} />
+          <Stack.Screen name="forgetotp" component={ForgetOTPContainer} />
+          <Stack.Screen
+            name="createnewpassword"
+            component={CreateNewPassword}
+          />
+          <Stack.Screen name="success" component={SuccessScreen} />
         </Stack.Group>
       </Stack.Navigator>
     </NavigationContainer>

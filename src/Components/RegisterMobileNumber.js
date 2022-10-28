@@ -13,8 +13,6 @@ import CountryPicker, {
   CountryCodeList,
 } from 'react-native-country-picker-modal';
 import DeviceCountry from 'react-native-device-country';
-// import CommonStyles from '../Assests/Styles/CommonStyles';
-// import {countryCodesList} from '../Constants/CountryCodes';
 import {countryCodesList} from '../Utility/CountryCodes';
 
 const RegisterMobileNumberInput = ({
