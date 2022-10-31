@@ -15,6 +15,7 @@ import Api from '../../src/Utility/Api';
 import OTPTextView from 'react-native-otp-textinput';
 import {Button} from 'react-native-elements';
 import SuccessScreen from './successScreen';
+import Loader from './Loader';
 
 IconBackArrow.loadFont();
 const api = Api.create();
@@ -23,6 +24,7 @@ const RegisterOTPContainer = () => {
   const [otpExpiresin, setOtpExpiresIn] = useState(60);
   const [otp, setOTP] = useState('');
   const [offline, setOffline] = useState(true);
+  const [loading, setLoading] = useState(false);
   const route = useRoute();
 
   const internetChangeListener = () => {
@@ -49,11 +51,32 @@ const RegisterOTPContainer = () => {
   }, [otpExpiresin === 60]);
 
   const handleSubmitOtpClick = async () => {
-    const response = await api.verifyOTP(
-      `${route.params.countryCode}${route.params.phoneNumber}`,
-      otp,
-      'phoneNumber',
-    );
+    setLoading(true);
+    await api
+      .verifyOTP(
+        `${route.params.countryCode}${route.params.phoneNumber}`,
+        otp,
+        'phoneNumber',
+      )
+      .then(response => {
+        setLoading(false);
+        if (otp.length === 4) {
+          if (response.ok) {
+            navigation.navigate('success', {
+              countryCode: `${route.params.countryCode}`,
+              phoneNumber: `${route.params.phoneNumber}`,
+            });
+          } else {
+            if (response.status === 400) {
+              Alert.alert(response.data.Message);
+            } else {
+              Alert.alert(response.problem);
+            }
+          }
+        } else {
+          Alert.alert('Social App', 'Please enter otp');
+        }
+      });
 
     if (otp.length === 4) {
       if (response.ok) {
@@ -74,21 +97,25 @@ const RegisterOTPContainer = () => {
   };
 
   const handleResendOtpClick = async () => {
-    const response = await api.getOTP(
-      `${route.params.countryCode}${route.params.phoneNumber}`,
-      'registration',
-      'phoneNumber',
-    );
-
-    if (response.ok) {
-      Alert.alert(response.data.Message);
-    } else {
-      if (response.status === 404) {
-        Alert.alert(response.data.Message);
-      } else {
-        Alert.alert(response.problem);
-      }
-    }
+    setLoading(true);
+    await api
+      .getOTP(
+        `${route.params.countryCode}${route.params.phoneNumber}`,
+        'registration',
+        'phoneNumber',
+      )
+      .then(response => {
+        setLoading(false);
+        if (response.ok) {
+          Alert.alert(response.data.Message);
+        } else {
+          if (response.status === 404) {
+            Alert.alert(response.data.Message);
+          } else {
+            Alert.alert(response.problem);
+          }
+        }
+      });
   };
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -207,6 +234,7 @@ const RegisterOTPContainer = () => {
           }}
         />
         {!offline && <InternetVerify />}
+        {loading && <Loader />}
       </View>
     </TouchableWithoutFeedback>
   );

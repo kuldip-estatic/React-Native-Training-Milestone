@@ -19,6 +19,7 @@ import * as yup from 'yup';
 import Icon from 'react-native-vector-icons/AntDesign';
 import IconFe from 'react-native-vector-icons/Feather';
 import RegisterMobileNumberInput from '../../Components/RegisterMobileNumber';
+import Loader from '../../Components/Loader';
 
 Icon.loadFont();
 IconFe.loadFont();
@@ -45,6 +46,7 @@ const LoginContainer = () => {
   const [countryCode, setCountryCode] = useState('+91');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [offline, setOffline] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const internetChangeListener = () => {
     DeviceEventEmitter.addListener('netListener', netStatus => {
@@ -68,40 +70,42 @@ const LoginContainer = () => {
 
   const handleEmailLoginClick = async values => {
     const data = values;
-    const response = await api.emailLoginApi(data);
-
-    if (response.ok) {
-      navigation.navigate('Home');
-    } else {
-      if (response.status === 401) {
-        Alert.alert(response.data.Message);
-      } else if (response.status === 400) {
-        Alert.alert(response.data.Message);
+    setLoading(true);
+    await api.emailLoginApi(data).then(response => {
+      setLoading(false);
+      if (response.ok) {
+        navigation.navigate('Home');
       } else {
-        Alert.alert(response.problem);
+        if (response.status === 401) {
+          Alert.alert(response.data.Message);
+        } else if (response.status === 400) {
+          Alert.alert(response.data.Message);
+        } else {
+          Alert.alert(response.problem);
+        }
       }
-    }
+    });
   };
 
   const handleSendOtpClick = async () => {
-    const response = await api.getOTP(
-      `${countryCode}${phoneNumber}`,
-      'login',
-      'phoneNumber',
-    );
-    if (response.ok) {
-      // navigation.navigate('otp', {phoneNumber: `${countryCode}${phoneNumber}`});
-      navigation.navigate('otp', {
-        countryCode: `${countryCode}`,
-        phoneNumber: `${phoneNumber}`,
+    setLoading(true);
+    await api
+      .getOTP(`${countryCode}${phoneNumber}`, 'login', 'phoneNumber')
+      .then(response => {
+        setLoading(false);
+        if (response.ok) {
+          navigation.navigate('otp', {
+            countryCode: `${countryCode}`,
+            phoneNumber: `${phoneNumber}`,
+          });
+        } else {
+          if (response.status === 404) {
+            Alert.alert(response.data.Message);
+          } else {
+            Alert.alert(response.problem);
+          }
+        }
       });
-    } else {
-      if (response.status === 404) {
-        Alert.alert(response.data.Message);
-      } else {
-        Alert.alert(response.problem);
-      }
-    }
   };
 
   return (
@@ -166,8 +170,8 @@ const LoginContainer = () => {
             <Formik
               validationSchema={loginValidationSchema}
               initialValues={{
-                email: 'nirali.timbadiya@theonetechnologies.co.in',
-                password: 'Test@123',
+                email: '',
+                password: '',
               }}
               onSubmit={values => handleEmailLoginClick(values)}>
               {({
@@ -324,6 +328,7 @@ const LoginContainer = () => {
           </Text>
         </View>
         {!offline && <InternetVerify />}
+        {loading && <Loader />}
       </View>
     </TouchableWithoutFeedback>
   );
@@ -332,8 +337,8 @@ const LoginContainer = () => {
 const Styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    marginHorizontal: 20,
-    marginTop: 30,
+    paddingHorizontal: 20,
+    paddingTop: 30,
   },
   tabView: {
     display: 'flex',

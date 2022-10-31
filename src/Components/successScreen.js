@@ -17,7 +17,6 @@ const SuccessScreen = () => {
   };
 
   useEffect(() => {
-    console.log(route, 'route');
     internetChangeListener();
   }, []);
 
@@ -43,7 +42,7 @@ const SuccessScreen = () => {
         style={{
           width: '60%',
           height: 200,
-          backgroundColor: 'lightgray',
+          backgroundColor: '#fff',
           alignSelf: 'center',
           marginBottom: 60,
         }}

@@ -14,6 +14,7 @@ import TextConstants from '../Utility/TextConstants';
 import Api from '../../src/Utility/Api';
 import OTPTextView from 'react-native-otp-textinput';
 import {Button} from 'react-native-elements';
+import Loader from './Loader';
 
 IconBackArrow.loadFont();
 const api = Api.create();
@@ -22,6 +23,7 @@ const ForgetOTPContainer = () => {
   const [otpExpiresin, setOtpExpiresIn] = useState(60);
   const [otp, setOTP] = useState('');
   const [offline, setOffline] = useState(true);
+  const [loading, setLoading] = useState(false);
   const route = useRoute();
 
   const internetChangeListener = () => {
@@ -48,37 +50,41 @@ const ForgetOTPContainer = () => {
   }, [otpExpiresin === 60]);
 
   const handleSubmitOtpClick = async () => {
-    const response = await api.verifyOTP(route.params.email, otp, 'email');
-    if (otp.length === 4) {
-      if (response.ok) {
-        navigation.navigate('createnewpassword', {email: route.params.email});
-      } else {
-        if (response.status === 400) {
-          Alert.alert(response.data.Message);
+    setLoading(true);
+    await api.verifyOTP(route.params.email, otp, 'email').then(response => {
+      setLoading(false);
+      if (otp.length === 4) {
+        if (response.ok) {
+          navigation.navigate('createnewpassword', {email: route.params.email});
         } else {
-          Alert.alert(response.problem);
+          if (response.status === 400) {
+            Alert.alert(response.data.Message);
+          } else {
+            Alert.alert(response.problem);
+          }
         }
+      } else {
+        Alert.alert('Social App', 'Please enter otp');
       }
-    } else {
-      Alert.alert('Social App', 'Please enter otp');
-    }
+    });
   };
 
   const handleResendOtpClick = async () => {
-    const response = await api.getOTP(
-      route.params.email,
-      'retrievepassword',
-      'email',
-    );
-    if (response.ok) {
-      Alert.alert(response.data.Message);
-    } else {
-      if (response.status === 404) {
-        Alert.alert(response.data.Message);
-      } else {
-        Alert.alert(response.problem);
-      }
-    }
+    setLoading(true);
+    await api
+      .getOTP(route.params.email, 'retrievepassword', 'email')
+      .then(response => {
+        setLoading(false);
+        if (response.ok) {
+          Alert.alert(response.data.Message);
+        } else {
+          if (response.status === 404) {
+            Alert.alert(response.data.Message);
+          } else {
+            Alert.alert(response.problem);
+          }
+        }
+      });
   };
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -197,6 +203,7 @@ const ForgetOTPContainer = () => {
           }}
         />
         {!offline && <InternetVerify />}
+        {loading && <Loader />}
       </View>
     </TouchableWithoutFeedback>
   );

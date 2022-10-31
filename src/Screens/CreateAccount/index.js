@@ -6,8 +6,6 @@ import {
   Alert,
   StyleSheet,
   TextInput,
-  TouchableWithoutFeedback,
-  Keyboard,
   DeviceEventEmitter,
 } from 'react-native';
 import Api from '../../Utility/Api';
@@ -25,6 +23,7 @@ import moment from 'moment';
 import TextConstants from '../../Utility/TextConstants';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import InternetVerify from '../../Components/InternetVerify';
+import Loader from '../../Components/Loader';
 
 IconCheck.loadFont();
 IconFe.loadFont();
@@ -59,13 +58,16 @@ const CreateAccountContainer = () => {
   const [open, setOpen] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(true);
   const [offline, setOffline] = useState(true);
+  const [loading, setLoading] = useState(false);
   const route = useRoute();
+  const api = Api.create();
+
   const internetChangeListener = () => {
     DeviceEventEmitter.addListener('netListener', netStatus => {
       setOffline(netStatus);
     });
   };
-  const api = Api.create();
+
   useEffect(() => {
     internetChangeListener();
   }, []);
@@ -79,17 +81,19 @@ const CreateAccountContainer = () => {
       password: values.Password,
       phoneNumber: route.params.phoneNumber,
     };
-
-    const response = await api.registerUser(data);
-    if (response.ok) {
-      navigation.navigate('Home');
-    } else {
-      if (response.status === 409) {
-        Alert.alert(response.data.Message);
+    setLoading(true);
+    await api.registerUser(data).then(response => {
+      setLoading(false);
+      if (response.ok) {
+        navigation.navigate('Home');
       } else {
-        Alert.alert(response.problem);
+        if (response.status === 409) {
+          Alert.alert(response.data.Message);
+        } else {
+          Alert.alert(response.problem);
+        }
       }
-    }
+    });
   };
 
   return (
@@ -294,8 +298,6 @@ const CreateAccountContainer = () => {
                       }}
                       style={{
                         width: '88%',
-                        // paddingLeft: 1.5,
-                        // paddingRight: 55,
                       }}
                       selectedTextStyle={{
                         color: '#616161',
@@ -439,6 +441,7 @@ const CreateAccountContainer = () => {
           </Formik>
         </View>
         {!offline && <InternetVerify />}
+        {loading && <Loader />}
       </KeyboardAwareScrollView>
     </React.Fragment>
   );

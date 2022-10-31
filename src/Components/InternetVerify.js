@@ -1,22 +1,25 @@
-import React, {useEffect} from 'react';
-import {View, TouchableOpacity, Text, Dimensions} from 'react-native';
+import React from 'react';
+import {View, Text, Dimensions, Image} from 'react-native';
+
 const DEVICE_DIMENSION = Dimensions.get('window');
+
 const InternetVerify = () => {
   return (
     <View
       style={{
+        flex: 1,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         position: 'absolute',
         left: 0,
         right: 0,
         top: 0,
         bottom: 0,
-        height: DEVICE_DIMENSION.height,
-        // width: DEVICE_DIMENSION.width,
-        backgroundColor: 'red',
-        justifyContent: 'center',
-        alignItems: 'center',
+        backgroundColor: '#fff',
       }}>
-      <Text>Internet nathi tamaru....</Text>
+      <Image source={{uri: 'no_wifi'}} style={{width: 100, height: 100}} />
+      <Text style={{textAlign: 'center'}}>No Internet</Text>
     </View>
   );
 };

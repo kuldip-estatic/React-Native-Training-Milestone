@@ -18,6 +18,7 @@ import Api from '../../Utility/Api';
 import {Formik} from 'formik';
 import * as yup from 'yup';
 import {useNavigation} from '@react-navigation/native';
+import Loader from '../../Components/Loader';
 
 IconBackArrow.loadFont();
 Icon.loadFont();
@@ -32,6 +33,7 @@ const validationSchema = yup.object().shape({
 const ForgetPasswordContainer = () => {
   const navigation = useNavigation();
   const [offline, setOffline] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const internetChangeListener = () => {
     DeviceEventEmitter.addListener('netListener', netStatus => {
@@ -42,20 +44,22 @@ const ForgetPasswordContainer = () => {
   useEffect(() => {
     internetChangeListener();
   }, []);
+
   const handleGetOtpClick = async values => {
     const data = values;
-
-    const response = await api.getOTP(data.email, 'retrievepassword', 'email');
-
-    if (response.ok) {
-      navigation.navigate('forgetotp', {email: data.email});
-    } else {
-      if (response.status === 404) {
-        Alert.alert(response.data.Message);
+    setLoading(true);
+    await api.getOTP(data.email, 'retrievepassword', 'email').then(response => {
+      setLoading(false);
+      if (response.ok) {
+        navigation.navigate('forgetotp', {email: data.email});
       } else {
-        Alert.alert(response.problem);
+        if (response.status === 404) {
+          Alert.alert(response.data.Message);
+        } else {
+          Alert.alert(response.problem);
+        }
       }
-    }
+    });
   };
   const handleLoginNav = () => {
     navigation.navigate('login');
@@ -81,7 +85,7 @@ const ForgetPasswordContainer = () => {
           <Formik
             validationSchema={validationSchema}
             initialValues={{
-              email: 'kuldip.panchal@theonetechnologies.co.in',
+              email: '',
             }}
             onSubmit={values => handleGetOtpClick(values)}>
             {({
@@ -157,6 +161,7 @@ const ForgetPasswordContainer = () => {
         </View>
       </TouchableWithoutFeedback>
       {!offline && <InternetVerify />}
+      {loading && <Loader />}
     </View>
   );
 };

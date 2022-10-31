@@ -2,9 +2,6 @@ import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
   TouchableWithoutFeedback,
   Keyboard,
   Alert,
@@ -17,6 +14,7 @@ import {useNavigation} from '@react-navigation/native';
 import TextConstants from '../../Utility/TextConstants';
 import RegisterMobileNumberInput from '../../Components/RegisterMobileNumber';
 import {Button} from 'react-native-elements';
+import Loader from '../../Components/Loader';
 
 IconBackArrow.loadFont();
 const api = Api.create();
@@ -26,6 +24,7 @@ const RegisterContainer = () => {
   const [countryCode, setCountryCode] = useState('+91');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [offline, setOffline] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const internetChangeListener = () => {
     DeviceEventEmitter.addListener('netListener', netStatus => {
@@ -38,26 +37,26 @@ const RegisterContainer = () => {
   }, []);
 
   const handleGetOTPClick = async () => {
-    const response = await api.getOTP(
-      `${countryCode}${phoneNumber}`,
-      'registration',
-      'phoneNumber',
-    );
-
-    if (response.ok) {
-      navigation.navigate('registerotp', {
-        countryCode: `${countryCode}`,
-        phoneNumber: `${phoneNumber}`,
+    setLoading(true);
+    await api
+      .getOTP(`${countryCode}${phoneNumber}`, 'registration', 'phoneNumber')
+      .then(response => {
+        setLoading(false);
+        if (response.ok) {
+          navigation.navigate('registerotp', {
+            countryCode: `${countryCode}`,
+            phoneNumber: `${phoneNumber}`,
+          });
+        } else {
+          if (response.status === 409) {
+            Alert.alert(response.data.Message);
+          } else if (response.status === 400) {
+            Alert.alert(response.data.Message);
+          } else {
+            Alert.alert(response.problem);
+          }
+        }
       });
-    } else {
-      if (response.status === 409) {
-        Alert.alert(response.data.Message);
-      } else if (response.status === 400) {
-        Alert.alert(response.data.Message);
-      } else {
-        Alert.alert(response.problem);
-      }
-    }
   };
 
   return (
@@ -141,6 +140,7 @@ const RegisterContainer = () => {
           </View>
         </View>
         {!offline && <InternetVerify />}
+        {loading && <Loader />}
       </View>
     </TouchableWithoutFeedback>
   );

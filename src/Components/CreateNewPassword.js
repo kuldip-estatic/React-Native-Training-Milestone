@@ -1,16 +1,15 @@
 import React, {useEffect, useState} from 'react';
 import {
   Alert,
-  BackHandler,
-  Keyboard,
   Platform,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
   DeviceEventEmitter,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import Api from '../../src/Utility/Api';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -21,6 +20,7 @@ import IconFeather from 'react-native-vector-icons/Feather';
 import IconIc from 'react-native-vector-icons/Ionicons';
 import {Formik} from 'formik';
 import * as yup from 'yup';
+import Loader from './Loader';
 
 IconFeather.loadFont();
 Icon.loadFont();
@@ -44,6 +44,7 @@ const CreateNewPassword = () => {
   });
 
   const [offline, setOffline] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [pwdVisible, setPwdVisible] = useState(false);
   const [cfmPwdVisible, setCfmPwdVisible] = useState(false);
   const internetChangeListener = () => {
@@ -55,162 +56,168 @@ const CreateNewPassword = () => {
   useEffect(() => {
     internetChangeListener();
   }, []);
+
   const handleSubmitPasswordClick = async values => {
-    const response = await api.createNewPassword(
-      route.params.email,
-      values.password,
-    );
-    if (response.ok) {
-      navigation.navigate('login');
-    } else {
-      if (response.status === 404) {
-        Alert.alert(response.data.Message);
-      } else if (response.status === 403) {
-        Alert.alert(response.data.Message);
-      } else if (response.status === 400) {
-        Alert.alert(response.data.Message);
-      } else {
-        Alert.alert(response.problem);
-      }
-    }
+    setLoading(true);
+    await api
+      .createNewPassword(route.params.email, values.password)
+      .then(response => {
+        setLoading(false);
+        if (response.ok) {
+          navigation.navigate('login');
+        } else {
+          if (response.status === 404) {
+            Alert.alert(response.data.Message);
+          } else if (response.status === 403) {
+            Alert.alert(response.data.Message);
+          } else if (response.status === 400) {
+            Alert.alert(response.data.Message);
+          } else {
+            Alert.alert(response.problem);
+          }
+        }
+      });
   };
   return (
-    <View style={styles.presentationView}>
-      <IconIc
-        name="arrow-back"
-        style={{color: '#2E2E2E'}}
-        size={20}
-        onPress={() => {
-          navigation.navigate('forgetotp', {email: route.params.email});
-        }}
-      />
-      <Text style={styles.txtHello}>
-        {TextConstants.create_new_pass_heading}
-      </Text>
-      <Text style={styles.txtSubHead}>
-        {TextConstants.create_new_pass_subtext}
-      </Text>
-      <View style={{marginTop: 15}}>
-        <Formik
-          validationSchema={passwordValidationSchema}
-          initialValues={{
-            password: '',
-            confirmPassword: '',
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.presentationView}>
+        <IconIc
+          name="arrow-back"
+          style={{color: '#2E2E2E'}}
+          size={20}
+          onPress={() => {
+            navigation.navigate('forgetotp', {email: route.params.email});
           }}
-          onSubmit={value => handleSubmitPasswordClick(value)}>
-          {({
-            handleChange,
-            handleBlur,
-            handleSubmit,
-            errors,
-            values,
-            touched,
-          }) => (
-            <>
-              <View style={styles.textInputView}>
-                <IconFeather name="lock" size={16} color="#C5C5C5" />
-                <TextInput
-                  keyboardType={
-                    Platform.OS === 'android' ? 'default' : 'email-address'
-                  }
-                  autoCapitalize="none"
-                  style={styles.txtInput}
-                  placeholder="New password"
-                  value={values.password}
-                  onChangeText={handleChange('password')}
-                  onBlur={handleBlur('password')}
-                  secureTextEntry={!pwdVisible}
-                />
-                <IconFeather
-                  name={pwdVisible ? 'eye-off' : 'eye'}
-                  size={16}
-                  color="#C5C5C5"
-                  style={{
-                    paddingRight: 20,
-                    right: 0,
-                    position: 'absolute',
-                  }}
-                  onPress={() => setPwdVisible(!pwdVisible)}
-                />
-              </View>
-              {errors.password && touched.password && (
-                <Text
-                  style={{
-                    fontSize: 13,
-                    color: 'red',
-                    marginTop: 5,
-                  }}>
-                  {errors.password}
-                </Text>
-              )}
-              <View style={{...styles.textInputView, marginTop: 10}}>
-                <IconFeather name="lock" size={16} color="#C5C5C5" />
-                <TextInput
-                  keyboardType={
-                    Platform.OS === 'android' ? 'default' : 'email-address'
-                  }
-                  autoCapitalize="none"
-                  style={styles.txtInput}
-                  placeholder={'Confirm Password'}
-                  value={values.confirmPassword}
-                  onChangeText={handleChange('confirmPassword')}
-                  onBlur={handleBlur('confirmPassword')}
-                  secureTextEntry={!cfmPwdVisible}
-                />
-                <IconFeather
-                  name={cfmPwdVisible ? 'eye-off' : 'eye'}
-                  size={16}
-                  style={{
-                    paddingRight: 20,
-                    right: 0,
-                    position: 'absolute',
-                  }}
-                  color="#C5C5C5"
-                  onPress={() => setCfmPwdVisible(!cfmPwdVisible)}
-                />
-              </View>
-              {errors.confirmPassword && touched.confirmPassword && (
-                <Text
-                  style={{
-                    fontSize: 13,
-                    color: 'red',
-                    marginTop: 5,
-                  }}>
-                  {errors.confirmPassword}
-                </Text>
-              )}
-              <TouchableOpacity
-                onPress={handleSubmit}
-                style={styles.btnLoginContainer}>
-                <Text style={styles.txtBtnLogin}>Submit</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </Formik>
-      </View>
-      <View style={styles.createAccContainer}>
-        <Text
-          style={{
-            ...styles.createAccText,
-            color: '#616161',
-            fontWeight: '400',
-          }}>
-          Back to{' '}
-          <Text
-            onPress={() => {
-              navigation.navigate('login');
+        />
+        <Text style={styles.txtHello}>
+          {TextConstants.create_new_pass_heading}
+        </Text>
+        <Text style={styles.txtSubHead}>
+          {TextConstants.create_new_pass_subtext}
+        </Text>
+        <View style={{marginTop: 15}}>
+          <Formik
+            validationSchema={passwordValidationSchema}
+            initialValues={{
+              password: '',
+              confirmPassword: '',
             }}
+            onSubmit={value => handleSubmitPasswordClick(value)}>
+            {({
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              errors,
+              values,
+              touched,
+            }) => (
+              <>
+                <View style={styles.textInputView}>
+                  <IconFeather name="lock" size={16} color="#C5C5C5" />
+                  <TextInput
+                    keyboardType={
+                      Platform.OS === 'android' ? 'default' : 'email-address'
+                    }
+                    autoCapitalize="none"
+                    style={styles.txtInput}
+                    placeholder="New password"
+                    value={values.password}
+                    onChangeText={handleChange('password')}
+                    onBlur={handleBlur('password')}
+                    secureTextEntry={!pwdVisible}
+                  />
+                  <IconFeather
+                    name={pwdVisible ? 'eye-off' : 'eye'}
+                    size={16}
+                    color="#C5C5C5"
+                    style={{
+                      paddingRight: 20,
+                      right: 0,
+                      position: 'absolute',
+                    }}
+                    onPress={() => setPwdVisible(!pwdVisible)}
+                  />
+                </View>
+                {errors.password && touched.password && (
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: 'red',
+                      marginTop: 5,
+                    }}>
+                    {errors.password}
+                  </Text>
+                )}
+                <View style={{...styles.textInputView, marginTop: 10}}>
+                  <IconFeather name="lock" size={16} color="#C5C5C5" />
+                  <TextInput
+                    keyboardType={
+                      Platform.OS === 'android' ? 'default' : 'email-address'
+                    }
+                    autoCapitalize="none"
+                    style={styles.txtInput}
+                    placeholder={'Confirm Password'}
+                    value={values.confirmPassword}
+                    onChangeText={handleChange('confirmPassword')}
+                    onBlur={handleBlur('confirmPassword')}
+                    secureTextEntry={!cfmPwdVisible}
+                  />
+                  <IconFeather
+                    name={cfmPwdVisible ? 'eye-off' : 'eye'}
+                    size={16}
+                    style={{
+                      paddingRight: 20,
+                      right: 0,
+                      position: 'absolute',
+                    }}
+                    color="#C5C5C5"
+                    onPress={() => setCfmPwdVisible(!cfmPwdVisible)}
+                  />
+                </View>
+                {errors.confirmPassword && touched.confirmPassword && (
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: 'red',
+                      marginTop: 5,
+                    }}>
+                    {errors.confirmPassword}
+                  </Text>
+                )}
+                <TouchableOpacity
+                  onPress={handleSubmit}
+                  style={styles.btnLoginContainer}>
+                  <Text style={styles.txtBtnLogin}>Submit</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </Formik>
+        </View>
+        <View style={styles.createAccContainer}>
+          <Text
             style={{
               ...styles.createAccText,
-              color: '#2667C9',
-              fontWeight: 'bold',
+              color: '#616161',
+              fontWeight: '400',
             }}>
-            {TextConstants.text_login}{' '}
+            Back to{' '}
+            <Text
+              onPress={() => {
+                navigation.navigate('login');
+              }}
+              style={{
+                ...styles.createAccText,
+                color: '#2667C9',
+                fontWeight: 'bold',
+              }}>
+              {TextConstants.text_login}{' '}
+            </Text>
           </Text>
-        </Text>
+        </View>
+        {!offline && <InternetVerify />}
+        {loading && <Loader />}
       </View>
-      {!offline && <InternetVerify />}
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 
