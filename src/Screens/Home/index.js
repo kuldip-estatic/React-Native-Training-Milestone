@@ -161,7 +161,6 @@ const HomeController = () => {
                   flex: 1,
                   justifyContent: 'flex-end',
                   bottom: 60,
-                  // position: 'absolute',
                 }}>
                 <View
                   style={{

@@ -21,9 +21,10 @@ const OTPContainer = () => {
   const navigation = useNavigation();
   const [otpExpiresin, setOtpExpiresIn] = useState(60);
   const [otp, setOTP] = useState('');
-  const route = useRoute();
   const [offline, setOffline] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [comeFrom, setComeFrom] = useState('');
+  const route = useRoute();
 
   const internetChangeListener = () => {
     DeviceEventEmitter.addListener('netListener', netStatus => {
@@ -34,6 +35,10 @@ const OTPContainer = () => {
   useEffect(() => {
     internetChangeListener();
   }, []);
+
+  useEffect(() => {
+    setComeFrom(route.params.comeFrom);
+  }, [comeFrom]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -50,52 +55,112 @@ const OTPContainer = () => {
 
   const handleSubmitOtpClick = async () => {
     setLoading(true);
-    await api
-      .verifyOTP(
-        `${route.params.countryCode}${route.params.phoneNumber}`,
-        otp,
-        'phoneNumber',
-      )
-      .then(response => {
-        setLoading(false);
-        if (otp.length === 4) {
-          if (response.ok) {
-            navigation.navigate('Home');
-          } else {
-            if (response.status === 404) {
-              Alert.alert(response.data.Message);
-            } else if (response.status === 400) {
-              Alert.alert(response.data.Message);
+    comeFrom === 'forget'
+      ? await api.verifyOTP(route.params.email, otp, 'email').then(response => {
+          setLoading(false);
+          if (otp.length === 4) {
+            if (response.ok) {
+              navigation.navigate('createnewpassword', {
+                email: route.params.email,
+              });
             } else {
-              Alert.alert(response.problem);
+              if (response.status === 400) {
+                Alert.alert(response.data.Message);
+              } else {
+                Alert.alert(response.problem);
+              }
             }
+          } else {
+            Alert.alert('Social App', 'Please enter otp');
           }
-        } else {
-          Alert.alert('Social App', 'Please enter otp');
-        }
-      });
+        })
+      : await api
+          .verifyOTP(
+            `${route.params.countryCode}${route.params.phoneNumber}`,
+            otp,
+            'phoneNumber',
+          )
+          .then(response => {
+            setLoading(false);
+            if (otp.length === 4) {
+              comeFrom === 'login'
+                ? response.ok
+                  ? navigation.navigate('Home')
+                  : response.status === 404
+                  ? Alert.alert(response.data.Message)
+                  : response.status === 400
+                  ? Alert.alert(response.data.Message)
+                  : Alert.alert(response.problem)
+                : comeFrom === 'register'
+                ? response.ok
+                  ? navigation.navigate('success', {
+                      countryCode: `${route.params.countryCode}`,
+                      phoneNumber: `${route.params.phoneNumber}`,
+                    })
+                  : response.status === 400
+                  ? Alert.alert(response.data.Message)
+                  : Alert.alert(response.problem)
+                : Alert.alert('forget otp');
+            } else {
+              Alert.alert('Social App', 'Please enter otp');
+            }
+          });
   };
 
   const handleResendOtpClick = async () => {
     setLoading(true);
-    await api
-      .getOTP(
-        `${route.params.countryCode}${route.params.phoneNumber}`,
-        'login',
-        'phoneNumber',
-      )
-      .then(response => {
-        setLoading(false);
-        if (response.ok) {
-          Alert.alert(response.data.Message);
-        } else {
-          if (response.status === 404) {
-            Alert.alert(response.data.Message);
-          } else {
-            Alert.alert(response.problem);
-          }
-        }
-      });
+    comeFrom === 'login'
+      ? await api
+          .getOTP(
+            `${route.params.countryCode}${route.params.phoneNumber}`,
+            'login',
+            'phoneNumber',
+          )
+          .then(response => {
+            setLoading(false);
+            if (response.ok) {
+              Alert.alert(response.data.Message);
+            } else {
+              if (response.status === 404) {
+                Alert.alert(response.data.Message);
+              } else {
+                Alert.alert(response.problem);
+              }
+            }
+          })
+      : comeFrom === 'register'
+      ? await api
+          .getOTP(
+            `${route.params.countryCode}${route.params.phoneNumber}`,
+            'registration',
+            'phoneNumber',
+          )
+          .then(response => {
+            setLoading(false);
+            if (response.ok) {
+              Alert.alert(response.data.Message);
+            } else {
+              if (response.status === 404) {
+                Alert.alert(response.data.Message);
+              } else {
+                Alert.alert(response.problem);
+              }
+            }
+          })
+      : await api
+          .getOTP(route.params.email, 'retrievepassword', 'email')
+          .then(response => {
+            setLoading(false);
+            if (response.ok) {
+              Alert.alert(response.data.Message);
+            } else {
+              if (response.status === 404) {
+                Alert.alert(response.data.Message);
+              } else {
+                Alert.alert(response.problem);
+              }
+            }
+          });
   };
 
   return (
@@ -106,6 +171,23 @@ const OTPContainer = () => {
           paddingHorizontal: 20,
           backgroundColor: '#fff',
         }}>
+        {comeFrom === 'register' ? (
+          <View style={{marginTop: 20}}>
+            <IconBackArrow
+              name="arrow-back"
+              style={{
+                left: 0,
+                position: 'absolute',
+              }}
+              size={20}
+              onPress={() => {
+                navigation.navigate('register');
+              }}
+            />
+          </View>
+        ) : (
+          <></>
+        )}
         <Text
           style={{
             fontSize: 24,
@@ -114,7 +196,11 @@ const OTPContainer = () => {
             fontWeight: 'bold',
             marginTop: 33,
           }}>
-          {TextConstants.text_verification_head}
+          {comeFrom === 'login'
+            ? TextConstants.text_verification_head
+            : comeFrom === 'register'
+            ? 'Enter OTP'
+            : 'Enter Code'}
         </Text>
         <Text
           style={{
@@ -124,7 +210,9 @@ const OTPContainer = () => {
             marginTop: 8,
             fontWeight: '400',
           }}>
-          {TextConstants.text_verification_subhead}{' '}
+          {comeFrom === 'forget'
+            ? 'We just send you a verification code via email'
+            : TextConstants.text_verification_subhead}{' '}
           <Text
             style={{
               fontSize: 14,
@@ -132,17 +220,9 @@ const OTPContainer = () => {
               color: '#2667C9',
               fontWeight: '600',
             }}>
-            {' '}
-            {route.params.countryCode}
-            {'  '}
-            <Text style={{alignSelf: 'flex-start'}}>
-              {route.params.phoneNumber
-                .slice(0, route.params.phoneNumber.length - 3)
-                .replace(/[0-9]/g, '*')}
-            </Text>
-            {route.params.phoneNumber.slice(
-              route.params.phoneNumber.length - 3,
-            )}
+            {comeFrom === 'forget'
+              ? route.params.email
+              : `${route.params.countryCode}${' '}${route.params.phoneNumber}`}
           </Text>
         </Text>
         <OTPTextView
@@ -162,7 +242,13 @@ const OTPContainer = () => {
           }}
         />
         <Button
-          title={TextConstants.text_submit_button}
+          title={
+            comeFrom === 'login'
+              ? TextConstants.text_submit_button
+              : comeFrom === 'register'
+              ? 'Submit Code'
+              : 'Verify'
+          }
           buttonStyle={{
             marginVertical: 20,
             borderRadius: 4,

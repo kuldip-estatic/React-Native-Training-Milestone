@@ -51,7 +51,10 @@ const ForgetPasswordContainer = () => {
     await api.getOTP(data.email, 'retrievepassword', 'email').then(response => {
       setLoading(false);
       if (response.ok) {
-        navigation.navigate('forgetotp', {email: data.email});
+        navigation.navigate('otp', {
+          email: data.email,
+          comeFrom: 'forget',
+        });
       } else {
         if (response.status === 404) {
           Alert.alert(response.data.Message);

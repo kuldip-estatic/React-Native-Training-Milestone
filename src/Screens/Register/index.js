@@ -43,9 +43,10 @@ const RegisterContainer = () => {
       .then(response => {
         setLoading(false);
         if (response.ok) {
-          navigation.navigate('registerotp', {
+          navigation.navigate('otp', {
             countryCode: `${countryCode}`,
             phoneNumber: `${phoneNumber}`,
+            comeFrom: 'register',
           });
         } else {
           if (response.status === 409) {

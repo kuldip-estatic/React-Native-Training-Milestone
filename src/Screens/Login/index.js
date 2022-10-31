@@ -97,6 +97,7 @@ const LoginContainer = () => {
           navigation.navigate('otp', {
             countryCode: `${countryCode}`,
             phoneNumber: `${phoneNumber}`,
+            comeFrom: 'login',
           });
         } else {
           if (response.status === 404) {
